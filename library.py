@@ -41,11 +41,9 @@ class Library:
         save_members(self.members)
         save_transactions(self.transactions)
 
-    def add_book(self, book):
-        if is_duplicate_book_id(self.books, book.book_id):
-            print("Error: Duplicate book ID.")
-            return
+    # BOOK METHODS
 
+    def add_book(self, book):
         if not all([
             is_valid_text(book.book_id),
             is_valid_text(book.title),
@@ -53,6 +51,10 @@ class Library:
             is_valid_text(book.category)
         ]):
             print("Error: Invalid book information.")
+            return
+
+        if is_duplicate_book_id(self.books, book.book_id):
+            print("Error: Duplicate book ID.")
             return
 
         self.books.append(book)
@@ -135,11 +137,9 @@ class Library:
         self.save_data()
         print("Book deleted successfully!")
 
-    def add_member(self, member):
-        if is_duplicate_member_id(self.members, member.member_id):
-            print("Error: Duplicate member ID.")
-            return
+    # MEMBER METHODS
 
+    def add_member(self, member):
         if not all([
             is_valid_text(member.member_id),
             is_valid_text(member.name),
@@ -147,6 +147,15 @@ class Library:
         ]):
             print("Error: Invalid member information.")
             return
+
+        if is_duplicate_member_id(self.members, member.member_id):
+            print("Error: Duplicate member ID.")
+            return
+
+        for existing_member in self.members:
+            if existing_member.email.strip().lower() == member.email.strip().lower():
+                print("Error: This email is already registered.")
+                return
 
         self.members.append(member)
         self.save_data()
@@ -205,7 +214,10 @@ class Library:
             return
 
         for other in self.members:
-            if other is not member and other.email.lower() == email.lower():
+            if (
+                other is not member
+                and other.email.strip().lower() == email.strip().lower()
+            ):
                 print("This email is already registered.")
                 return
 
@@ -229,6 +241,8 @@ class Library:
         self.members.remove(member)
         self.save_data()
         print("Member deleted successfully!")
+
+    # TRANSACTION METHODS
 
     def create_transaction(self, book_id, member_id, action):
         transaction_id = f"T{len(self.transactions) + 1:06d}"
@@ -265,9 +279,13 @@ class Library:
 
         member.borrowed_books.append(book.book_id)
 
-        self.create_transaction(book.book_id, member.member_id, "Issue")
-        self.save_data()
+        self.create_transaction(
+            book.book_id,
+            member.member_id,
+            "Issue"
+        )
 
+        self.save_data()
         print("Book issued successfully!")
 
     def return_book(self, book_id, member_id):
@@ -296,9 +314,13 @@ class Library:
 
         member.borrowed_books.remove(book.book_id)
 
-        self.create_transaction(book.book_id, member.member_id, "Return")
-        self.save_data()
+        self.create_transaction(
+            book.book_id,
+            member.member_id,
+            "Return"
+        )
 
+        self.save_data()
         print("Book returned successfully!")
 
     def show_transactions(self):
@@ -340,6 +362,8 @@ class Library:
         if not found:
             print("No matching transactions found.")
 
+    # BACKUP RESTORE
+
     def restore_data(self):
         confirmation = input(
             "Restore the latest backup for all data files? (yes/no): "
@@ -356,4 +380,4 @@ class Library:
 
             print("Latest backups restored successfully!")
         else:
-            print("Restore failed. One or more backup files were not found.")
+            print("Restore failed. No data files were changed.")
